@@ -1,0 +1,80 @@
+.figure {
+  margin: 0;
+}
+
+/*
+ * A fixed 16:9 box, reserved before the poster loads. Sizing the frame from the image instead
+ * would shift the rest of the article downward as it arrives, which is the CLS half of the Core
+ * Web Vitals budget in PRD §4.1.
+ */
+.frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+  background: rgb(24, 24, 24);
+}
+
+.player {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.trigger {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+}
+
+.poster {
+  object-fit: cover;
+}
+
+.badge {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.badge svg {
+  padding: 14px 16px;
+  border-radius: 999px;
+  background: rgb(200, 16, 46);
+  color: rgb(255, 255, 255);
+  box-shadow: 0 2px 14px rgb(0 0 0 / 45%);
+  transition: transform 0.15s ease;
+}
+
+.trigger:hover .badge svg,
+.trigger:focus-visible .badge svg {
+  transform: scale(1.08);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid rgb(255, 255, 255);
+  outline-offset: 2px;
+}
+
+.caption {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: rgb(170, 170, 170);
+}
+
+.fallback {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 0.85rem;
+}

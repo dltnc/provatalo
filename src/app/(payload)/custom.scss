@@ -1,0 +1,19 @@
+/*
+ * Styles for custom admin components. Imported by the (payload) layout, so it is scoped to the
+ * admin panel and never reaches the public site.
+ */
+
+.logout-nav-link {
+  align-items: center;
+  margin-block-start: 0.5rem;
+}
+
+.logout-nav-link svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+}
+
+.logout-nav-link__label {
+  margin-inline-start: 0.5rem;
+}
