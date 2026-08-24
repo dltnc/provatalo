@@ -1,6 +1,7 @@
 import type { GlobalConfig } from 'payload'
 
 import { isSuperAdmin } from '@/access/roles'
+import { validateHexColor } from '@/lib/color'
 
 /**
  * Site-wide settings. PRD §3.5 restricts these to superadmins but never modelled the global.
@@ -43,6 +44,7 @@ export const SiteSettings: GlobalConfig = {
     {
       name: 'socialLinks',
       type: 'array',
+      labels: { plural: 'Social Links', singular: 'Social Link' },
       fields: [
         {
           name: 'platform',
@@ -51,7 +53,35 @@ export const SiteSettings: GlobalConfig = {
           options: ['facebook', 'x', 'instagram', 'youtube'],
         },
         { name: 'url', type: 'text', required: true },
+        {
+          name: 'followers',
+          type: 'number',
+          label: 'Follower count',
+          admin: {
+            description:
+              'Shown in the homepage follow widget. Updated by hand for now — live follower APIs need app keys and rate limiting (deferred with the self-serve ad portal).',
+          },
+        },
       ],
+    },
+    {
+      name: 'facebookAppId',
+      type: 'text',
+      label: 'Facebook App ID',
+      admin: {
+        description:
+          'Enables the Facebook comments plugin on article pages. Leave empty to hide comments entirely.',
+      },
+    },
+    {
+      name: 'accentColor',
+      type: 'text',
+      label: 'Accent colour',
+      validate: validateHexColor,
+      admin: {
+        description:
+          'Hex code driving the site-wide accent (nav bar, links, buttons, ticker). Hover and tint shades are derived automatically — e.g. #c8102e red, #0f766e teal, #1d4ed8 blue. Empty = default red.',
+      },
     },
     {
       name: 'breakingTickerEnabled',

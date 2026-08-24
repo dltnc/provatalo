@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { isSuperAdmin, isSuperAdminField } from '@/access/roles'
+import { isAuthenticatedField, isSuperAdmin, isSuperAdminField } from '@/access/roles'
 import { slugField } from '@/fields/slugField'
 
 export const Users: CollectionConfig = {
@@ -12,11 +12,9 @@ export const Users: CollectionConfig = {
   },
   auth: true,
   access: {
-    // Deliberately not public. Users hold email addresses, and an auth collection's `email`
-    // field cannot be hidden per-role, so the whole collection stays behind auth. Public
-    // author pages (`/author/[slug]`) render server-side through the Local API, which runs
-    // with `overrideAccess` and is unaffected.
-    read: ({ req }) => Boolean(req.user),
+    // Public: author profiles are public content (bylines, /author/[slug] pages, sitemap).
+    // Sensitive fields below are hidden from anonymous reads via field-level access.
+    read: () => true,
     create: isSuperAdmin,
     delete: isSuperAdmin,
     update: ({ req, id }) => {
@@ -33,6 +31,17 @@ export const Users: CollectionConfig = {
     },
     slugField({ from: 'name' }),
     {
+      // Declaring `email` explicitly lets us attach field-level access to it; Payload merges
+      // this over its base auth field (keeping the login behaviour intact). Without it the
+      // auth collection's email would be readable by anyone once `read` is public.
+      name: 'email',
+      type: 'email',
+      required: true,
+      access: {
+        read: isAuthenticatedField,
+      },
+    },
+    {
       name: 'roles',
       type: 'select',
       hasMany: true,
@@ -46,6 +55,7 @@ export const Users: CollectionConfig = {
         { label: 'Reporter', value: 'reporter' },
       ],
       access: {
+        read: isAuthenticatedField,
         // Without this a reporter could promote themselves by editing their own profile,
         // since the collection-level rule above lets them update their own document.
         create: isSuperAdminField,

@@ -1,79 +1,44 @@
 import type { Metadata } from 'next'
 
-import Image from 'next/image'
-import Link from 'next/link'
-import React from 'react'
-
+import { ArticleCard } from '@/components/ArticleCard'
+import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { ShareButtons } from '@/components/ShareButtons'
 import { findVideoArticles } from '@/lib/content'
-import { formatDate } from '@/lib/format'
-import { posterFor } from '@/lib/media'
-
-import styles from './page.module.css'
+import { getSiteSettings } from '@/lib/queries'
+import { absoluteUrl } from '@/lib/seo'
+import { VIDEO_HREF } from '@/lib/urls'
 
 export const metadata: Metadata = {
   description: 'সর্বশেষ ভিডিও প্রতিবেদন।',
   title: 'ভিডিও',
+  alternates: { canonical: absoluteUrl(VIDEO_HREF) },
 }
 
 /**
- * Video index.
- *
- * Cards are plain links to the article rather than inline players: mounting a dozen YouTube
- * iframes on one page is the single most expensive thing a news site can do to its Core Web
- * Vitals, and the play badge already sets the expectation that a video is one tap away.
+ * Video index. Cards are plain links to the article rather than inline players: mounting a dozen
+ * YouTube iframes on one page is the most expensive thing a news site can do to its Core Web
+ * Vitals, and `ArticleCard` already renders the play badge that sets the expectation.
  */
 export default async function VideoIndexPage() {
-  const articles = await findVideoArticles()
+  const [articles, settings] = await Promise.all([findVideoArticles(), getSiteSettings()])
 
   return (
-    <div className={styles.page}>
-      <h1 className={styles.heading}>ভিডিও</h1>
+    <div className="mx-auto max-w-6xl px-4 py-6">
+      <Breadcrumbs items={[{ href: '/', label: 'হোম' }, { label: 'ভিডিও' }]} />
+      <h1 className="mb-4 border-b-2 border-brand pb-2 text-2xl font-extrabold text-ink">ভিডিও</h1>
+
+      <div className="mb-8">
+        <ShareButtons title={`ভিডিও | ${settings.siteName}`} url={absoluteUrl(VIDEO_HREF)} />
+      </div>
 
       {articles.length === 0 ? (
-        <p className={styles.empty}>এখনও কোনও ভিডিও প্রতিবেদন প্রকাশিত হয়নি।</p>
+        <p className="py-12 text-center text-muted">এখনও কোনও ভিডিও প্রতিবেদন প্রকাশিত হয়নি।</p>
       ) : (
-        <ul className={styles.grid}>
-          {articles.map((article) => {
-            const poster = posterFor([article.video?.thumbnail, article.featuredImage], 'card')
-            const publishedAt = formatDate(article.publishedAt)
-
-            return (
-              <li className={styles.card} key={article.id}>
-                <Link className={styles.link} href={`/article/${article.slug}`}>
-                  <span className={styles.frame}>
-                    {poster ? (
-                      <Image
-                        alt={poster.alt}
-                        className={styles.poster}
-                        fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 360px"
-                        src={poster.url}
-                      />
-                    ) : null}
-
-                    <span aria-hidden="true" className={styles.badge}>
-                      <svg height="20" viewBox="0 0 24 24" width="20">
-                        <path d="M8 5.5v13l11-6.5z" fill="currentColor" />
-                      </svg>
-                    </span>
-
-                    {article.video?.duration ? (
-                      <span className={styles.duration}>{article.video.duration}</span>
-                    ) : null}
-                  </span>
-
-                  <span className={styles.title}>{article.title}</span>
-
-                  {publishedAt ? (
-                    <time className={styles.date} dateTime={article.publishedAt ?? undefined}>
-                      {publishedAt}
-                    </time>
-                  ) : null}
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {articles.map((article, i) => (
+            <ArticleCard article={article} key={article.id} priority={i < 3} variant="standard" />
+          ))}
+        </div>
       )}
     </div>
   )

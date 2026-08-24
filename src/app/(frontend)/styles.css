@@ -1,164 +1,128 @@
-:root {
-  --font-mono: 'Roboto Mono', monospace;
+@import 'tailwindcss';
+
+/*
+ * Public-site design system (PRD §3.3). Light, high-density news theme with a red masthead
+ * accent. Scoped to the (frontend) route group — the Payload admin never imports this file, so
+ * its own styling is untouched.
+ */
+
+@theme {
+  /* Brand + neutrals */
+  --color-brand: #c8102e;
+  --color-brand-dark: #9e0c24;
+  --color-brand-50: #fdecef;
+  --color-ink: #17181a;
+  --color-body: #33363b;
+  --color-muted: #6b7280;
+  --color-line: #e6e7ea;
+  --color-surface: #ffffff;
+  --color-wash: #f4f5f7;
+
+  /* Bangla-first type. Variables are provided by next/font in the layout: Noto Sans Bengali for
+     UI/headings (true bold weights), Tiro Bangla serif for long-form reading. */
+  --font-sans: var(--font-bengali), 'Noto Sans Bengali', system-ui, sans-serif;
+  --font-serif: var(--font-tiro), 'Tiro Bangla', Georgia, serif;
 }
 
-* {
-  box-sizing: border-box;
-}
+@layer base {
+  html {
+    /* 17px base (up from the 16px default) lifts every rem-based size on the site together. */
+    font-size: 17px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
 
-html {
-  font-size: 18px;
-  line-height: 32px;
+  body {
+    background: var(--color-surface);
+    color: var(--color-body);
+    font-family: var(--font-sans);
+  }
 
-  background: rgb(0, 0, 0);
-  -webkit-font-smoothing: antialiased;
-}
+  a {
+    color: inherit;
+  }
 
-html,
-body,
-#app {
-  height: 100%;
-}
-
-body {
-  font-family: system-ui;
-  font-size: 18px;
-  line-height: 32px;
-
-  margin: 0;
-  color: rgb(1000, 1000, 1000);
-
-  @media (max-width: 1024px) {
-    font-size: 15px;
-    line-height: 24px;
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
   }
 }
 
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
+/* Rich-text article body: preflight strips these defaults, so re-establish them here. Reading
+   surfaces use Tiro Bangla — the serif is reserved for where people actually read prose. */
+@layer components {
+  .rich-text {
+    font-family: var(--font-serif);
+    font-size: 1.1875rem;
+    line-height: 2;
+    color: var(--color-body);
+  }
+  .rich-text p {
+    margin: 1.15rem 0;
+  }
+  .rich-text h2 {
+    margin: 2rem 0 0.75rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--color-ink);
+  }
+  .rich-text h3 {
+    margin: 1.5rem 0 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--color-ink);
+  }
+  .rich-text a {
+    color: var(--color-brand);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .rich-text ul {
+    margin: 1.15rem 0;
+    padding-inline-start: 1.5rem;
+    list-style: disc;
+  }
+  .rich-text ol {
+    margin: 1.15rem 0;
+    padding-inline-start: 1.5rem;
+    list-style: decimal;
+  }
+  .rich-text li {
+    margin: 0.4rem 0;
+  }
+  .rich-text blockquote {
+    margin: 1.75rem 0;
+    padding-inline-start: 1rem;
+    border-inline-start: 3px solid var(--color-brand);
+    font-style: italic;
+    color: var(--color-ink);
+  }
+  .rich-text figure {
+    margin: 1.75rem 0;
+  }
+  .rich-text img {
+    border-radius: 0.5rem;
+  }
 }
 
-h1 {
-  margin: 40px 0;
-  font-size: 64px;
-  line-height: 70px;
-  font-weight: bold;
-
-  @media (max-width: 1024px) {
-    margin: 24px 0;
-    font-size: 42px;
-    line-height: 42px;
-  }
-
-  @media (max-width: 768px) {
-    font-size: 38px;
-    line-height: 38px;
-  }
-
-  @media (max-width: 400px) {
-    font-size: 32px;
-    line-height: 32px;
-  }
-}
-
-p {
-  margin: 24px 0;
-
-  @media (max-width: 1024px) {
-    margin: calc(var(--base) * 0.75) 0;
-  }
-}
-
-a {
-  color: currentColor;
-
-  &:focus {
-    opacity: 0.8;
-    outline: none;
-  }
-
-  &:active {
-    opacity: 0.7;
-    outline: none;
-  }
-}
-
-svg {
-  vertical-align: middle;
-}
-
-.home {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  height: 100vh;
-  padding: 45px;
-  max-width: 1024px;
-  margin: 0 auto;
-  overflow: hidden;
-
-  @media (max-width: 400px) {
-    padding: 24px;
-  }
-
-  .content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex-grow: 1;
-
-    h1 {
-      text-align: center;
+/* Breaking-news ticker marquee. Doubled content in markup makes the -50% loop seamless. */
+@layer utilities {
+  @keyframes ticker {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
     }
   }
-
-  .links {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    a {
-      text-decoration: none;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-    }
-
-    .admin {
-      color: rgb(0, 0, 0);
-      background: rgb(1000, 1000, 1000);
-      border: 1px solid rgb(0, 0, 0);
-    }
-
-    .docs {
-      color: rgb(1000, 1000, 1000);
-      background: rgb(0, 0, 0);
-      border: 1px solid rgb(1000, 1000, 1000);
-    }
+  .animate-ticker {
+    animation: ticker 32s linear infinite;
   }
-
-  .footer {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    @media (max-width: 1024px) {
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    p {
-      margin: 0;
-    }
-
-    .codeLink {
-      text-decoration: none;
-      padding: 0 0.5rem;
-      background: rgb(60, 60, 60);
-      border-radius: 4px;
+  @media (prefers-reduced-motion: reduce) {
+    .animate-ticker {
+      animation: none;
     }
   }
 }

@@ -25,3 +25,5 @@ export const isEditorOrAbove: Access = ({ req }) => hasRole(req.user, 'superadmi
 
 /** Field-level access returns a boolean only — no query constraints are possible here. */
 export const isSuperAdminField: FieldAccess = ({ req }) => hasRole(req.user, 'superadmin')
+
+export const isAuthenticatedField: FieldAccess = ({ req }) => Boolean(req.user)

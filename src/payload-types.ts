@@ -862,9 +862,21 @@ export interface SiteSetting {
     | {
         platform: 'facebook' | 'x' | 'instagram' | 'youtube';
         url: string;
+        /**
+         * Shown in the homepage follow widget. Updated by hand for now — live follower APIs need app keys and rate limiting (deferred with the self-serve ad portal).
+         */
+        followers?: number | null;
         id?: string | null;
       }[]
     | null;
+  /**
+   * Enables the Facebook comments plugin on article pages. Leave empty to hide comments entirely.
+   */
+  facebookAppId?: string | null;
+  /**
+   * Hex code driving the site-wide accent (nav bar, links, buttons, ticker). Hover and tint shades are derived automatically — e.g. #c8102e red, #0f766e teal, #1d4ed8 blue. Empty = default red.
+   */
+  accentColor?: string | null;
   /**
    * Master switch for the ticker, independent of any article flagged breaking.
    */
@@ -895,8 +907,11 @@ export interface SiteSettingsSelect<T extends boolean = true> {
     | {
         platform?: T;
         url?: T;
+        followers?: T;
         id?: T;
       };
+  facebookAppId?: T;
+  accentColor?: T;
   breakingTickerEnabled?: T;
   adsEnabled?: T;
   updatedAt?: T;
