@@ -17,3 +17,21 @@
 .logout-nav-link__label {
   margin-inline-start: 0.5rem;
 }
+
+/*
+ * White-label login logo (src/components/admin/LoginLogo.tsx). Sized close to Payload's own
+ * logo footprint so the login card layout is undisturbed. The wordmark in the PNG is dark
+ * grey, which disappears on the dark theme — there it sits on a light chip instead.
+ */
+.login-logo {
+  display: block;
+  width: 15rem;
+  height: auto;
+}
+
+[data-theme='dark'] .login-logo {
+  width: calc(15rem + 1.5rem);
+  padding: 0.5rem 0.75rem;
+  background: var(--theme-elevation-1000);
+  border-radius: var(--style-radius-m);
+}
