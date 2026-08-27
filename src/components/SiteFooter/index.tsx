@@ -87,9 +87,22 @@ export const SiteFooter = ({
           ) : null}
         </div>
 
-        <p className="mt-6 text-xs text-muted">
-          © {year} {settings.siteName}। সর্বস্বত্ব সংরক্ষিত।
-        </p>
+        <div className="mt-6 flex flex-col gap-2 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            © {year} {settings.siteName}। সর্বস্বত্ব সংরক্ষিত।
+          </p>
+          <p>
+            Designed By{' '}
+            <a
+              className="font-semibold text-ink hover:text-brand"
+              href="https://daltonchakma.vercel.app/"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Dalton Chakma
+            </a>
+          </p>
+        </div>
       </div>
     </footer>
   )

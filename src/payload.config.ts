@@ -104,7 +104,9 @@ export default buildConfig({
           },
         },
       },
-      bucket: process.env.R2_BUCKET,
+      // Safe to coalesce: `enabled` above is false whenever this is missing, so the empty
+      // string is never handed to the S3 client.
+      bucket: process.env.R2_BUCKET || '',
       config: {
         credentials: {
           accessKeyId: process.env.R2_ACCESS_KEY_ID || '',

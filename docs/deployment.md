@@ -44,18 +44,35 @@ This project reads `DATABASE_URL` (not `DATABASE_URI`) — see `src/payload.conf
 | `NEXT_PUBLIC_SERVER_URL` | `https://your-domain.com`                      | Public origin used for canonical/OG tags and preview URLs             |
 | `CRON_SECRET`            | Any random string                              | See cron below                                                        |
 
+The five `R2_*` variables from part 3 belong here too. `R2_PUBLIC_URL` in particular must be set
+for **Production and Preview before the build runs**, because `next.config.ts` reads it at build
+time to allow-list the image host — a runtime-only value is too late.
+
 4. **Deploy.**
 5. Recommended: **Settings → Functions → Function Region → Singapore (`sin1`)** so functions sit
    near both the Atlas cluster and the audience.
 
 ### Cron (scheduled publishing)
 
-`vercel.json` already registers a cron hitting `/api/payload-jobs/run` every 5 minutes. Vercel
+`vercel.json` registers a cron hitting `/api/payload-jobs/run` on `0 23 * * *`. Vercel
 automatically sends `Authorization: Bearer $CRON_SECRET`, which `jobs.access` in
 `src/payload.config.ts` checks — the `CRON_SECRET` env var above is what makes it pass.
 
-> **Plan gotcha:** on Vercel's Hobby plan, cron schedules are limited to **once per day**. The
-> `*/5 * * * *` schedule requires Pro (or change the schedule to daily on Hobby).
+Cron schedules are **UTC**, so `0 23 * * *` fires at **05:00 Asia/Dhaka** — early enough that an
+article scheduled overnight is live before the morning audience arrives.
+
+Once per day is the **Hobby plan limit**, and it is the binding constraint on this feature: a story
+scheduled for 2 PM does not publish at 2 PM, it publishes at the next daily run. Two ways out:
+
+- **Vercel Pro** — change the schedule to `*/5 * * * *` for 5-minute granularity.
+- **Any external scheduler** — the route is just an authenticated HTTP GET, so a free cron service
+  or a GitHub Actions workflow can hit it as often as you like:
+
+  ```sh
+  curl -H "Authorization: Bearer $CRON_SECRET" https://your-domain.com/api/payload-jobs/run
+  ```
+
+Publishing by hand is unaffected either way — the cron only drives *future-dated* releases.
 
 ### First run
 
@@ -100,6 +117,10 @@ Whatever you choose is your `R2_PUBLIC_URL` (e.g. `https://media.provatalo.com`)
 
 ### 3.4 Wire it into the app
 
+> **Already done in this repo** — `@payloadcms/storage-s3` is a dependency, the plugin is
+> registered in `src/payload.config.ts`, and `next.config.ts` allow-lists the R2 image host. The
+> code below records what those files contain; setting the env vars is all that is left.
+
 Payload talks to R2 through its S3 adapter — R2 exposes an S3-compatible API. (The dedicated
 `@payloadcms/storage-r2` package is only for Cloudflare Workers; the
 [official docs](https://payloadcms.com/docs/upload/storage-adapters#s3-r2) recommend the S3
@@ -109,7 +130,7 @@ adapter for Vercel/Node.)
 pnpm add @payloadcms/storage-s3
 ```
 
-**`src/payload.config.ts`** — add the plugin:
+**`src/payload.config.ts`** — the plugin:
 
 ```ts
 import { s3Storage } from '@payloadcms/storage-s3'
@@ -156,18 +177,19 @@ R2_ENDPOINT=https://<accountid>.r2.cloudflarestorage.com
 R2_PUBLIC_URL=https://media.provatalo.com
 ```
 
-**`next.config.ts`** — the frontend renders images with `next/image`, which only optimizes
-hosts it knows about. Add the R2 host (keep `localPatterns` for pre-R2 files and local dev):
+**`next.config.ts`** — the frontend renders images with `next/image`, which only optimizes hosts
+it knows about, so the R2 host is allow-listed from `R2_PUBLIC_URL` (`localPatterns` stays for
+pre-R2 files and local dev):
 
 ```ts
-const r2Host = process.env.R2_PUBLIC_URL
+const r2Hostname = process.env.R2_PUBLIC_URL
   ? new URL(process.env.R2_PUBLIC_URL).hostname
   : undefined
 
 const nextConfig: NextConfig = {
   images: {
     localPatterns: [{ pathname: '/api/media/file/**' }],
-    remotePatterns: r2Host ? [{ protocol: 'https', hostname: r2Host }] : [],
+    remotePatterns: r2Hostname ? [{ protocol: 'https', hostname: r2Hostname }] : [],
   },
   // ...
 }
