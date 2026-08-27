@@ -26,7 +26,21 @@ export const Media: CollectionConfig = {
       // Fixed dimensions: social crawlers expect exactly 1200x630 for link previews.
       { name: 'og', width: 1200, height: 630, position: 'centre' },
     ],
-    adminThumbnail: 'thumbnail',
+    /**
+     * Naming an image size here (`adminThumbnail: 'thumbnail'`) makes Payload build the preview URL
+     * from its own file route — `/api/media/file/<file>-150x84.png` — which never goes through the
+     * storage adapter's `generateFileURL`. Once R2 is enabled that route 500s, because the adapter
+     * sets `disableLocalStorage` and there is no longer a file on disk to serve, so every preview in
+     * the admin renders as a blank box.
+     *
+     * Reading the URL off the document keeps the thumbnail pointing at wherever the file actually
+     * lives: the R2 domain in production, and `/api/media/file/**` in local dev without R2
+     * configured, since that is what the adapter-less `sizes.thumbnail.url` already contains.
+     */
+    adminThumbnail: ({ doc }) => {
+      const sizes = doc.sizes as Record<string, { url?: null | string }> | undefined
+      return sizes?.thumbnail?.url ?? (doc.url as null | string | undefined) ?? null
+    },
     focalPoint: true,
     crop: true,
   },
